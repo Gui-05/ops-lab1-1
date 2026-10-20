@@ -1,4 +1,4 @@
-# 实验 1 记录：第 <组号> 组
+# 实验 1 记录：第 1 组
 
 现场检查时将打开本文件，按其中的链接核对。证据一律以链接或文本形式给出，不要只贴截图。将 `<填写>` 替换为本组的内容。main 受保护之后，修改本文件也须通过 PR。
 
@@ -6,27 +6,27 @@
 
 | 项 | 内容 |
 |---|---|
-| 小组 | 第 <组号> 组 |
-| 仓库地址 | <https://github.com/…> |
-| 代码载体 | 统一示例 / 自己的项目（<项目名与语言>） |
-| runner 与语言版本 | `ubuntu-24.04`，<Go 或其他语言的版本> |
-| 合并方式 | <squash / merge commit / rebase> |
+| 小组 | 第 1 组 |
+| 仓库地址 | <https://github.com/Gui-05/ops-lab1-1> |
+| 代码载体 | 统一示例 |
+| runner 与语言版本 | `ubuntu-24.04`，Go `1.26.9` |
+| 合并方式 | squash |
 
 ## 2. 任务 0：本地基线
 
 | 问题 | 观察结果 |
 |---|---|
-| 第一次 `make package` 得到的 BUILD_INFO（粘贴） | <填写> |
-| 修改一行、不提交，再次打包：BUILD_INFO 是否变化？二进制文件的 sha256 是否变化？（贴出两次的 sha256） | <填写> |
-| 两次 `go version -m` 输出中的 vcs 行有何不同？ | <填写> |
-| 仅凭 BUILD_INFO，能否回答该包是什么、在哪台机器上、何时、用哪份代码构建？哪一项信息会出错？ | <填写> |
+| 第一次 `make package` 得到的 BUILD_INFO（粘贴） | `name=enroll-conflict`<br>`version=1.0.0`<br>`build_no=1`<br>`run_id=local`<br>`commit=7b63b41c13f061439997b0e6e4eaa2af922a7aa1`<br>`go=go1.26.9` |
+| 修改一行、不提交，再次打包：BUILD_INFO 是否变化？二进制文件的 sha256 是否变化？（贴出两次的 sha256） | **BUILD_INFO 没有变化**（`diff` 无任何输出）。二进制文件的 **sha256 变了**：<br>第一次 `f23447d406c42af7dd35e23c2d1b2f15484cfb709cc9b4bb1262643694b8528e`<br>第二次 `501ca18b6a49b56b16d3575d9f07cef97e30661248459b4e2400e9e38bfef9cb` |
+| 两次 `go version -m` 输出中的 vcs 行有何不同？ | `vcs.revision` 与 `vcs.time` **完全相同**（都是 `7b63b41c…` / `2026-10-12T16:26:07Z`），因为 HEAD 没有变动；唯一的差别是 **`vcs.modified` 由 `false` 变为 `true`**，即编译器记录了第二次是从脏工作区（有未提交改动）编出来的。 |
+| 仅凭 BUILD_INFO，能否回答该包是什么、在哪台机器上、何时、用哪份代码构建？哪一项信息会出错？ | **「在哪台机器上」「何时」无法回答，「用哪份代码构建」这一项会出错。** `commit` 取自 `git rev-parse HEAD`，衡量的是 HEAD 指向哪个提交，而非实际参与编译的工作区内容：改动未提交时它照旧输出 `7b63b41…`，而二进制已由新代码编出（sha256 由 `f23447d4…` 变为 `501ca18b…`），两次打包的产物完全无法区分。文件里没有机器与时间字段，`vcs.time` 是提交时间而非构建时间；`run_id=local` 说明没有构建系统在记账。真正没撒谎的是二进制内嵌的 `vcs.modified=true`。因此必须把**制品内嵌的 vcs 元数据**与**外部构建系统记录的 `run_id` / `build_no`** 合起来判读。<br>**成立条件**：以上针对「同一仓库、改动未提交」的情形；若改动已提交，`commit` 会随之更新、能正确指向源码，但仍回答不了「何时、在哪台机器上构建」，也仍无法区分「同一提交构建了两次」的两份产物。 |
 
 ## 3. 证据
 
 | 项 | 链接或文本 |
 |---|---|
-| 规则集里启用的规则 | <列出规则名、审批人数和必需检查的名称> |
-| 组长直接 `git push origin main` 被拒的终端输出 | <粘贴文本> |
+| 规则集里启用的规则 | `Restrict deletions`、`Block force pushes`、`Require a pull request before merging`（**Required approvals = 1**）、`Require status checks to pass`（必需检查 = **`ci`**）。Enforcement status = **Active**，**Bypass list 为空**。 |
+| 组长直接 `git push origin main` 被拒的终端输出 | `remote: error: GH013: Repository rule violations found for refs/heads/main.`<br>`remote: - Changes must be made through a pull request.`<br>`remote: - Required status check "ci" is expected.`<br>`To https://github.com/Gui-05/ops-lab1-1.git`<br>` ! [remote rejected] main -> main (push declined due to repository rule violations)` |
 | 第一轮：失败的 PR 运行 | <链接> |
 | 第一轮：修复后通过的 PR 运行 | <链接> |
 | 第一轮：合入 main 后的运行（含制品） | <链接> |
