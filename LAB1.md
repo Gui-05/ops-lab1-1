@@ -35,8 +35,8 @@
 | 第二轮：补测试后失败的运行 | <链接> |
 | 第二轮：撤销缺陷后通过的运行 | <链接> |
 | 未合入分支上的 tag 被 release gate 拒绝的运行 | <链接> |
-| Release v1.0.0 | <链接> |
-| Release v1.0.1 | <链接> |
+| Release v1.0.0 | https://github.com/Gui-05/ops-lab1-1/releases/tag/v1.0.0 |
+| Release v1.0.1 | https://github.com/Gui-05/ops-lab1-1/releases/tag/v1.0.1 |
 
 ## 4. 追溯与运行
 
@@ -44,34 +44,71 @@
 
 | 项 | v1.0.0 | v1.0.1 |
 |---|---|---|
-| 版本号 | <填写> | <填写> |
-| 构建号 | <填写> | <填写> |
-| 提交号（SHA） | <填写> | <填写> |
-| 引入该提交的 PR | <编号与链接> | <编号与链接> |
-| 构建它的 Actions 运行（`trace.sh` 给出的链接） | <链接> | <链接> |
-| 制品 sha256（发布当时，取自 Release 里的 .sha256） | <填写> | <填写> |
+| 版本号 | `1.0.0` | `1.0.1` |
+| 构建号 | `1` | `3` |
+| 提交号（SHA） | `2824a726c640abef3f95819744e068261a4ee69a` | `23901b079b888af61deb98377703aaaf58dccfc8` |
+| 引入该提交的 PR | [#2](https://github.com/Gui-05/ops-lab1-1/pull/2) | [#5](https://github.com/Gui-05/ops-lab1-1/pull/5) |
+| 构建它的 Actions 运行（`trace.sh` 给出的链接） | https://github.com/Gui-05/ops-lab1-1/actions/runs/39566016067 | https://github.com/Gui-05/ops-lab1-1/actions/runs/39573305453 |
+| 制品 sha256（发布当时，取自 Release 里的 .sha256） | `a366f9c98e9496ed8568eafdeec8511633e45c555c3d527561b2fd15fe88cf07` | `8064cf67b3b96339e5bc696bb8bc52373b50f3df1acdf4b1f5137232bbddee6b` |
 
-仅凭构建号能否唯一确定是哪次运行？v1.0.0 的构建号在 `ci` 和 `release` 的运行列表中各对应哪次运行？<填写>
+仅凭构建号不能唯一确定是哪次运行，因为 `ci` 和 `release` 的构建号各自从 1 开始计数。v1.0.0 的构建号 `1` 同时对应 `ci` 运行 #1（https://github.com/Gui-05/ops-lab1-1/actions/runs/39374873071）和 `release` 运行 #1（https://github.com/Gui-05/ops-lab1-1/actions/runs/39566016067）；`BUILD_INFO` 中的 `run_id=39566016067` 才能唯一指回发布它的运行。
 
-发布 v1.0.1 之后重新下载 v1.0.0 的附件，计算得到的 sha256：<填写>。与上表中发布当时的值是否一致？<填写>
+发布 v1.0.1 之后重新下载 v1.0.0 的附件，计算得到的 sha256：`a366f9c98e9496ed8568eafdeec8511633e45c555c3d527561b2fd15fe88cf07`。与上表中发布当时的值一致。
 
 `trace.sh` 输出（v1.0.0）：
 
 ```text
-<粘贴>
+== 1. 校验和
+enroll-conflict_1.0.0_linux_amd64.tar.gz: OK
+== 2. 制品里的 BUILD_INFO
+name=enroll-conflict
+version=1.0.0
+build_no=1
+run_id=39566016067
+commit=2824a726c640abef3f95819744e068261a4ee69a
+go=go1.26.9
+== 3. 提交 2824a726c640abef3f95819744e068261a4ee69a
+作者: Asuka <3425658599@qq.com>
+时间: 2026-10-21T15:59:30+08:00
+标题: ci: add gated tag release workflow (#2)
+主干: 该提交在 origin/main 的历史上
+指向它的 tag: v1.0.0
+版本号: 1.0.0    构建号: 1
+提交页面（含关联的 PR）: https://github.com/Gui-05/ops-lab1-1/commit/2824a726c640abef3f95819744e068261a4ee69a
+构建它的运行: https://github.com/Gui-05/ops-lab1-1/actions/runs/39566016067
 ```
 
 `trace.sh` 输出（v1.0.1）：
 
 ```text
-<粘贴>
+== 1. 校验和
+enroll-conflict_1.0.1_linux_amd64.tar.gz: OK
+== 2. 制品里的 BUILD_INFO
+name=enroll-conflict
+version=1.0.1
+build_no=3
+run_id=39573305453
+commit=23901b079b888af61deb98377703aaaf58dccfc8
+go=go1.26.9
+== 3. 提交 23901b079b888af61deb98377703aaaf58dccfc8
+作者: jyhholdon <2920415597@qq.com>
+时间: 2026-10-21T16:55:57+08:00
+标题: docs: document CI and release pipelines (#5)
+主干: 该提交在 origin/main 的历史上
+指向它的 tag: v1.0.1
+版本号: 1.0.1    构建号: 3
+提交页面（含关联的 PR）: https://github.com/Gui-05/ops-lab1-1/commit/23901b079b888af61deb98377703aaaf58dccfc8
+构建它的运行: https://github.com/Gui-05/ops-lab1-1/actions/runs/39573305453
 ```
 
 任务 6 第 4 步，两次 `/version` 的输出：
 
 ```text
-<运行 v1.0.1 时>
-<换回 v1.0.0 后>
+运行 v1.0.1 时：
+{"version":"1.0.1","commit":"23901b079b888af61deb98377703aaaf58dccfc8","build_no":"3","go":"go1.26.9"}
+
+换回 v1.0.0 后：
+{"version":"1.0.0","commit":"2824a726c640abef3f95819744e068261a4ee69a","build_no":"1","go":"go1.26.9"}
 ```
 
 ## 5. 数据
@@ -131,7 +168,7 @@
 
 **问题 4：发布与回退。** 假设 v1.0.1 发布后发现缺陷，应当如何处理？为什么不应删除 v1.0.1 的 tag、再用同一版本号重新发布？任务 6 中将服务从 v1.0.1 切换回 v1.0.0 时，使用的是哪个文件，是否需要重新构建？请用两次 `/version` 的输出说明。如果改为从源码重新构建 v1.0.0，得到的文件与原附件是否相同（参考问题 3）？最后，如果有人删除 v1.0.0 的附件，换上一个新文件和对应的新 `.sha256`，`trace.sh` 能否发现？本组在第 4 节记录的值能否发现？可以查阅 GitHub 的 Immutable releases 设置的用途。
 
-<填写>
+所用数据为第 4 节的两个 tag、提交号、`run_id`、附件 sha256 和两次 `/version` 输出。若 v1.0.1 发布后发现缺陷，应通过受保护的 PR 修复并发布新的修订版本，例如 v1.0.2；不应删除 v1.0.1 的 tag 后复用同一版本号，否则同一版本号会对应不同源码和附件，破坏版本、提交、构建和制品之间的唯一对应关系。任务 6 的回退直接使用已下载的 `enroll-conflict_1.0.0_linux_amd64.tar.gz` 及其中的二进制，没有重新构建，`/version` 随即从 v1.0.1 的版本 `1.0.1`、提交 `23901b07…`、构建号 `3` 切换为 v1.0.0 的版本 `1.0.0`、提交 `2824a726…`、构建号 `1`。若从源码重新构建 v1.0.0，只有在源码树、Go 版本、VCS 状态、注入参数和归档规则完全一致时才可能得到相同哈希；问题 3 将验证这些条件并非总是自动成立。如果有人同时替换 Release 中的 tar.gz 和对应 `.sha256`，当前 `trace.sh` 无法发现，因为它只能验证两者彼此一致、`BUILD_INFO` 中的提交存在且属于 `main`，不能证明该附件与首次发布时相同。本组在第 4 节记录的原 sha256 能提供对照，GitHub Immutable Releases 则可在平台层面阻止已发布附件被替换，并为审计保留更强证据。
 
 ## 7. 选做记录
 
