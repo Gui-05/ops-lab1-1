@@ -39,7 +39,9 @@ dist/enroll-conflict_1.0.0_linux_amd64/enroll-conflict -version
 | `main.go`、`main_test.go` | HTTP 服务、版本信息及其测试 |
 | `Makefile` | 本地与 CI 共用的构建入口 |
 | `scripts/trace.sh` | 追溯脚本：由制品回答“它来自哪次提交” |
+| `.github/workflows/ci.yml` | PR 和主干提交的质量检查、主干打包与 artifact 上传 |
+| `.github/workflows/release.yml` | tag 发布门禁、质量检查、打包与 GitHub Release |
 | `Dockerfile` | 选做 O1 使用 |
 | `LAB1.md` | 小组的证据与分析记录，需要填写并提交 |
 
-仓库中没有 `.github/workflows/`：流水线由小组在实验中自行编写。
+流水线由小组在实验中自行编写：`ci` 负责合并前检查和主干制品，`release` 负责正式版本发布。
