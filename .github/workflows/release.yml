@@ -1,0 +1,68 @@
+name: release
+
+on:
+  push:
+    tags:
+      - 'v[0-9]+.[0-9]+.[0-9]+'
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+
+      - name: Release gate
+        env:
+          TAG_SHA: ${{ github.sha }}
+        run: |
+          set -euo pipefail
+          git fetch --no-tags origin +refs/heads/main:refs/remotes/origin/main
+          tag_commit=$(git rev-parse --verify "${TAG_SHA}^{commit}")
+          if ! git merge-base --is-ancestor "$tag_commit" origin/main; then
+            echo "::error::Release rejected: tag commit $tag_commit is not in origin/main history."
+            exit 1
+          fi
+          echo "Release gate passed: $tag_commit is in origin/main history."
+
+      - name: Install Go
+        uses: actions/setup-go@v7
+        with:
+          go-version: '1.26.9'
+
+      - name: gofmt
+        run: make fmt-check
+
+      - name: vet
+        run: make vet
+
+      - name: test
+        run: make test
+
+      - name: Package and checksums
+        env:
+          TAG_NAME: ${{ github.ref_name }}
+          BUILD_NO: ${{ github.run_number }}
+          RUN_ID: ${{ github.run_id }}
+          COMMIT: ${{ github.sha }}
+        run: |
+          set -euo pipefail
+          VERSION="${TAG_NAME#v}"
+          make package VERSION="$VERSION" BUILD_NO="$BUILD_NO" RUN_ID="$RUN_ID" COMMIT="$COMMIT"
+          sha256sum dist/*/enroll-conflict
+          sha256sum dist/*.tar.gz
+
+      - name: Create Release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+          TAG_NAME: ${{ github.ref_name }}
+        run: |
+          set -euo pipefail
+          gh release create "$TAG_NAME" --verify-tag --title "$TAG_NAME" \
+            --notes "Release $TAG_NAME. Build metadata is included in BUILD_INFO." \
+            dist/*.tar.gz dist/*.tar.gz.sha256
