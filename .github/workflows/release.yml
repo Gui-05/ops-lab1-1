@@ -66,3 +66,67 @@ jobs:
           gh release create "$TAG_NAME" --verify-tag --title "$TAG_NAME" \
             --notes "Release $TAG_NAME. Build metadata is included in BUILD_INFO." \
             dist/*.tar.gz dist/*.tar.gz.sha256
+
+  image:
+    needs: release
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: read
+      packages: write
+    env:
+      GH_TOKEN: ${{ github.token }}
+      GH_REPO: ${{ github.repository }}
+      TAG_NAME: ${{ github.ref_name }}
+      SOURCE: ${{ github.server_url }}/${{ github.repository }}
+      ACTOR: ${{ github.actor }}
+
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Prepare image metadata
+        run: |
+          set -euo pipefail
+          version="${TAG_NAME#v}"
+          echo "VERSION=$version" >> "$GITHUB_ENV"
+          echo "PKG=enroll-conflict_${version}_linux_amd64" >> "$GITHUB_ENV"
+          echo "IMAGE=ghcr.io/${GH_REPO,,}" >> "$GITHUB_ENV"
+
+      - name: Download and verify Release assets
+        run: |
+          set -euo pipefail
+          gh release download "$TAG_NAME" \
+            --pattern "$PKG.tar.gz" \
+            --pattern "$PKG.tar.gz.sha256" \
+            --dir release-assets
+          cd release-assets
+          sha256sum -c "$PKG.tar.gz.sha256"
+          tar -xzf "$PKG.tar.gz"
+          cat "$PKG/BUILD_INFO"
+
+      - name: Log in to GHCR
+        run: |
+          set -euo pipefail
+          printf '%s' "$GH_TOKEN" |
+            docker login ghcr.io -u "$ACTOR" --password-stdin
+
+      - name: Build image from Release binary
+        run: |
+          set -euo pipefail
+          commit=$(sed -n 's/^commit=//p' "release-assets/$PKG/BUILD_INFO")
+          test -n "$commit"
+          docker build --platform linux/amd64 \
+            --file Dockerfile \
+            --build-arg VERSION="$VERSION" \
+            --build-arg COMMIT="$commit" \
+            --build-arg SOURCE="$SOURCE" \
+            --tag "$IMAGE:$TAG_NAME" \
+            "release-assets/$PKG"
+
+      - name: Push image and record digest
+        run: |
+          set -euo pipefail
+          docker push "$IMAGE:$TAG_NAME"
+          echo '```text' >> "$GITHUB_STEP_SUMMARY"
+          docker buildx imagetools inspect "$IMAGE:$TAG_NAME" |
+            tee -a "$GITHUB_STEP_SUMMARY"
+          echo '```' >> "$GITHUB_STEP_SUMMARY"
